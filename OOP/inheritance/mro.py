@@ -10,8 +10,12 @@ class A:
     def ping(self):
         print("A.ping")
 
+class Y:
+    def ping(self):
+        print("Y.ping")
 
-class B(A):
+
+class B(Y):
     def ping(self):
         print("B.ping")
         super().ping()
