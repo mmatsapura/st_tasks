@@ -1,5 +1,100 @@
 # Задание: Абстракция
-#
+
+from abc import ABC, abstractmethod
+
+
+class Converter(ABC):
+
+    @abstractmethod
+    def from_unit(self):
+        pass
+
+    @abstractmethod
+    def to_unit(self):
+        pass
+
+    @abstractmethod
+    def convert(self, value):
+        pass
+
+    def can_convert(self, value):
+        return True
+
+    def describe(self, value):
+        if not isinstance(value, (int, float)):
+            raise TypeError
+        if not self.can_convert(value):
+            raise ValueError
+        result = round(self.convert(value), 2)
+        return f'{value} {self.from_unit()} = {result} {self.to_unit()}'
+
+    def __str__(self):
+        return f'{self.__class__.__name__}({self.from_unit()} -> {self.to_unit()})'
+
+
+class KmToMiles(Converter):
+
+    def from_unit(self):
+        return 'km'
+
+    def to_unit(self):
+        return 'mi'
+
+    def convert(self, value):
+        return value * 0.62137
+
+    def can_convert(self, value):
+        if value < 0:
+            return False
+        return True
+
+
+class CToF(Converter):
+
+    def from_unit(self):
+        return 'C'
+
+    def to_unit(self):
+        return 'F'
+
+    def convert(self, value):
+        return value * 9 / 5 + 32
+
+
+class CurrencyToUah(Converter):
+
+    def __init__(self, currency, rate):
+
+        if not currency:
+            raise ValueError
+        if not isinstance(rate, (int, float)):
+            raise TypeError
+        if rate <= 0:
+            raise ValueError
+        else:
+            self.currency = currency
+            self.rate = rate
+
+    def from_unit(self):
+        return self.currency
+
+    def to_unit(self):
+        return 'UAH'
+
+    def convert(self, value):
+        return value * self.rate
+
+    def can_convert(self, value):
+        if value < 0:
+            return False
+        return True
+
+
+def describe_all(converters, value):
+    return [convert.describe(value) for convert in converters]
+
+
+
 # Сделай абстрактный конвертер единиц и три реализации.
 # Общие шаги (проверка, округление, строка результата) живут в родителе.
 # Формула перевода — только в детях: у каждого она своя.
