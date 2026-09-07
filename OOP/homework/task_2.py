@@ -1,6 +1,6 @@
 # Задание 2. Автосалон
 
-from abc import ABC, abstractmethod
+from abc import ABC
 import datetime
 
 
@@ -9,38 +9,12 @@ class Dealership:
     def __init__(self):
         self.__sales = []
         self.__clients = {}
-        self.__employees = {
-            1: Employee(
-                name='Игорь',
-                person_id=1,
-                position='Продавец',
-                sales_bonus=0
-            )
-        }
-        self.__cars: dict[int, Car] = {
-            1: ElectroCar(
-                car_id=1,
-                name='Tesla Model 3',
-                year=2026,
-                body='Седан',
-                color='Белый',
-                price=45000,
-                specifications=['Автопилот', 'Полный привод', 'Доводчики дверей'],
-                power_reserve=500
-            ),
-            2: PetrolCar(
-                car_id=2,
-                name='BMW X3',
-                year=2026,
-                body='Кроссовер',
-                color='Синий',
-                price=60000,
-                specifications=['Полный привод', 'Кожаный салон', 'Карбоновый обвес'],
-                consumption_100km=10.5
-            )
-        }
+        self.__employees = {}
+        self.__cars: dict[int, Car] = {}
 
     def add_car(self, car: Car):
+        if car.car_id in self.__cars:
+            raise ValueError('Машина с таким ID уже существует')
         self.__cars[car.car_id] = car
 
     def show_all_cars(self):
@@ -48,20 +22,26 @@ class Dealership:
         return all_cars_dict
 
     def add_client(self, client: Client):
+        if client.person_id in self.__clients:
+            raise ValueError('Клиент с таким ID уже существует')
         self.__clients[client.person_id] = client
 
     def show_all_clients(self):
-        all_clients_dict = self.__clients
+        all_clients_dict = self.__clients.copy()
         return all_clients_dict
 
     def add_employees(self, employee: Employee):
+        if employee.person_id in self.__employees:
+            raise ValueError('Работник с таким ID уже существует')
         self.__employees[employee.person_id] = employee
 
     def show_all_employees(self):
-        all_employees_dict = self.__employees
+        all_employees_dict = self.__employees.copy()
         return all_employees_dict
 
     def sell_car(self, client: Client, employee: Employee, car: Car):
+        if car.car_id not in self.__cars:
+            raise KeyError
         if client.withdraw_money(car.price):
             amount = car.price / 10
             employee.add_sales_bonus(round(amount, 2))
@@ -70,7 +50,7 @@ class Dealership:
             del self.__cars[car.car_id]
             print(f'Покупка автомобиля {car.name} прошла успешно.\nПоздравляем {client.name}')
         else:
-            print(f'Не достаточно средств на счету для покупки автомобиля {car.name}')
+            raise ValueError(f'Не достаточно средств на счету для покупки автомобиля {car.name}')
 
     def show_all_sales(self):
         return self.__sales.copy()
@@ -82,7 +62,11 @@ class Order:
         self.client = client
         self.employee = employee
         self.car = car
-        self.price = price
+        self.__price = price
+
+    @property
+    def price(self):
+        return self.__price
 
 #_______________________________________________________________________________________
 class Person(ABC):
@@ -103,9 +87,9 @@ class Person(ABC):
     def person_id(self):
         return self.__person_id
 
-    @abstractmethod
     def get_info(self):
-        pass
+        return (f'Name: {self.name}\n'
+                f'ID: {self.person_id}\n')
 
 
 class Client(Person):
@@ -123,15 +107,18 @@ class Client(Person):
         return self.__balance
 
     def withdraw_money(self, amount: int|float):
+        if not isinstance(amount, (int, float)):
+            raise TypeError('Атрибут amount должен быть числом (int или float)')
+        if amount < 0:
+            raise ValueError('Атрибут amount не может быть меньше 0')
         if amount > self.__balance:
             return False
         self.__balance -= amount
         return True
 
     def get_info(self):
-        return (f'Name: {self.name}\n'
-                f'ID: {self.person_id}\n'
-                f'Balance: {self.balance}$')
+        base_info = super().get_info()
+        return f'{base_info}\n, Balance: {self.balance}$'
 
 
 class Employee(Person):
@@ -155,14 +142,16 @@ class Employee(Person):
         return self.__sales_bonus
 
     def add_sales_bonus(self, amount: int|float):
+        if not isinstance(amount, (int, float)):
+            raise TypeError('Атрибут amount должен быть числом (int или float)')
+        if amount < 0:
+            raise ValueError('Атрибут amount не может быть меньше 0')
         self.__sales_bonus += amount
         return self.__sales_bonus
 
     def get_info(self):
-        return (f'Name: {self.name}\n'
-                f'ID: {self.person_id}\n'
-                f'Position: {self.position}\n'
-                f'Balance: {self.sales_bonus}$')
+        base_info = super().get_info()
+        return f'{base_info}\nPosition: {self.position}\nBalance: {self.sales_bonus}$'
 
 #_______________________________________________________________________________________
 class Car(ABC):
@@ -207,7 +196,11 @@ class Car(ABC):
                 raise TypeError('Каждый элемент specifications должен быть строкой (str)')
         if not specifications:
             raise ValueError("Список specifications не может быть пустым.")
-        self.specifications = specifications
+        self.__specifications = specifications
+
+    @property
+    def specifications(self):
+        return self.__specifications.copy()
 
     @property
     def car_id(self):
@@ -217,9 +210,14 @@ class Car(ABC):
     def price(self):
         return self.__price
 
-    @abstractmethod
     def get_info(self):
-        pass
+        return (f'ID: {self.car_id}\n'
+                f'Name: {self.name}\n'
+                f'Year: {self.year}\n'
+                f'Body: {self.body}\n'
+                f'Color: {self.color}\n'
+                f'Price: {self.price}$\n'
+                f'Specifications: {self.specifications}\n')
 
 
 class ElectroCar(Car):
@@ -234,14 +232,8 @@ class ElectroCar(Car):
         self.power_reserve = power_reserve
 
     def get_info(self):
-        return (f'ID: {self.car_id}\n'
-                f'Name: {self.name}\n'
-                f'Year: {self.year}\n'
-                f'Body: {self.body}\n'
-                f'Color: {self.color}\n'
-                f'Price: {self.price}$\n'
-                f'Specifications: {self.specifications}\n'
-                f'Power reserve: {self.power_reserve}Km')
+        base_info = super().get_info()
+        return f'{base_info}, Power reserve: {self.power_reserve}Km'
 
 
 class PetrolCar(Car):
@@ -256,15 +248,8 @@ class PetrolCar(Car):
         self.consumption_100km = consumption_100km
 
     def get_info(self):
-        return (f'ID: {self.car_id}\n'
-                f'Name: {self.name}\n'
-                f'Year: {self.year}\n'
-                f'Body: {self.body}\n'
-                f'Color: {self.color}\n'
-                f'Price: {self.price}$\n'
-                f'Specifications: {self.specifications}\n'
-                f'Fuel consumption: L/100km {self.consumption_100km}')
-
+        base_info = super().get_info()
+        return f"{base_info}, Fuel consumption: L/100km {self.consumption_100km}"
 
 
 #_______________________________________________________________________________________
