@@ -44,9 +44,7 @@ class KmToMiles(Converter):
         return value * 0.62137
 
     def can_convert(self, value):
-        if value < 0:
-            return False
-        return True
+        return value >= 0
 
 
 class CToF(Converter):
@@ -71,9 +69,8 @@ class CurrencyToUah(Converter):
             raise TypeError
         if rate <= 0:
             raise ValueError
-        else:
-            self.currency = currency
-            self.rate = rate
+        self.currency = currency
+        self.rate = rate
 
     def from_unit(self):
         return self.currency
@@ -85,9 +82,7 @@ class CurrencyToUah(Converter):
         return value * self.rate
 
     def can_convert(self, value):
-        if value < 0:
-            return False
-        return True
+        return value >= 0
 
 
 def describe_all(converters, value):

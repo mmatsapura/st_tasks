@@ -5,14 +5,12 @@
 class Person:
 
     def __init__(self, name):
-        if not name:
-            raise ValueError
-        if not isinstance(name, str):
-            raise TypeError
+        if not isinstance(name, str) or not name:
+            raise ValueError('Атрибут name должен быть не пустой строкой')
         self.name = name
 
     def __str__(self):
-        return f'{self.__class__.__name__}({self.name})'
+        return f'Person({self.name})'
 
 
 class Note:
@@ -21,7 +19,7 @@ class Note:
         self.text = text
 
     def __str__(self):
-        return f'{self.__class__.__name__}({self.text})'
+        return f'Note({self.text})'
 
 
 class Capsule:
@@ -34,11 +32,14 @@ class Capsule:
         self.title = title
         self.witnesses = []
         self.notes = []
-        self.is_open = True
+        self.__is_open = True
+
+    def __check_status(self):
+        if not self.__is_open:
+            raise ValueError('Капсула закрыта')
 
     def add_witness(self, person):
-        if not self.is_open:
-            raise ValueError
+        self.__check_status()
         if not isinstance(person, Person):
             raise TypeError
         if person in self.witnesses:
@@ -52,8 +53,7 @@ class Capsule:
             self.add_witness(person)
 
     def write(self, text):
-        if not self.is_open:
-            raise ValueError
+        self.__check_status()
         if not text:
             raise ValueError
         if not isinstance(text, str):
@@ -61,15 +61,14 @@ class Capsule:
         self.notes.append(Note(text))
 
     def write_from_file(self, path):
-        if not self.is_open:
-            raise ValueError
+        self.__check_status()
         added_count = 0
         with open(path, encoding='utf-8') as file:
             for line in file:
                 clean_line = line.strip()
                 if not clean_line:
                     continue
-                if clean_line[0] == '#':
+                if clean_line.startswith('#'):
                     continue
                 self.write(clean_line)
                 added_count += 1
@@ -97,12 +96,11 @@ class Capsule:
                 file.write(new_note)
 
     def seal(self):
-        if not self.is_open:
-            raise ValueError
-        self.is_open = False
+        self.__check_status()
+        self.__is_open = False
 
     def __str__(self):
-        if self.is_open:
+        if self.__is_open:
             status = 'open'
         else:
             status = 'sealed'
@@ -110,11 +108,7 @@ class Capsule:
 
 
 def capsules_of(person, capsules):
-    results = []
-    for capsule in capsules:
-        if person in capsule.witnesses:
-            results.append(capsule.title)
-    return results
+    return [capsule.title for capsule in capsules if person in capsule.witnesses]
 
 
 
