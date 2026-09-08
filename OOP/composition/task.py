@@ -1,5 +1,120 @@
 # Задание: Композиция и агрегация
-#
+
+
+
+class Person:
+
+    def __init__(self, name):
+        if not isinstance(name, str) or not name:
+            raise ValueError('Атрибут name должен быть не пустой строкой')
+        self.name = name
+
+    def __str__(self):
+        return f'Person({self.name})'
+
+
+class Note:
+
+    def __init__(self, text):
+        self.text = text
+
+    def __str__(self):
+        return f'Note({self.text})'
+
+
+class Capsule:
+
+    def __init__(self, title):
+        if not title:
+            raise ValueError
+        if not isinstance(title, str):
+            raise TypeError
+        self.title = title
+        self.witnesses = []
+        self.notes = []
+        self.__is_open = True
+
+    def __check_status(self):
+        if not self.__is_open:
+            raise ValueError('Капсула закрыта')
+
+    def add_witness(self, person):
+        self.__check_status()
+        if not isinstance(person, Person):
+            raise TypeError
+        if person in self.witnesses:
+            raise ValueError
+        self.witnesses.append(person)
+
+    def add_witnesses(self, *people):
+        if not people:
+            raise ValueError
+        for person in people:
+            self.add_witness(person)
+
+    def write(self, text):
+        self.__check_status()
+        if not text:
+            raise ValueError
+        if not isinstance(text, str):
+            raise TypeError
+        self.notes.append(Note(text))
+
+    def write_from_file(self, path):
+        self.__check_status()
+        added_count = 0
+        with open(path, encoding='utf-8') as file:
+            for line in file:
+                clean_line = line.strip()
+                if not clean_line:
+                    continue
+                if clean_line.startswith('#'):
+                    continue
+                self.write(clean_line)
+                added_count += 1
+        if added_count == 0:
+            raise ValueError
+
+    def find_note(self, fragment):
+        if not fragment:
+            raise ValueError
+        if not isinstance(fragment, str):
+            raise TypeError
+        for note in self.notes:
+            if fragment in note.text:
+                return note
+        else:
+            raise ValueError
+
+    def preview(self):
+        return [f'{i}. {note.text}' for i, note in enumerate(self.notes, start=1)]
+
+    def dump(self, path):
+        with open(path, "w", encoding="utf-8") as file:
+            for note in self.notes:
+                new_note = note.text + '\n'
+                file.write(new_note)
+
+    def seal(self):
+        self.__check_status()
+        self.__is_open = False
+
+    def __str__(self):
+        if self.__is_open:
+            status = 'open'
+        else:
+            status = 'sealed'
+        return f'{self.__class__.__name__}({self.title}): {len(self.witnesses)} witnesses, {len(self.notes)} notes, {status}'
+
+
+def capsules_of(person, capsules):
+    return [capsule.title for capsule in capsules if person in capsule.witnesses]
+
+
+
+
+
+
 # Сделай капсулу времени.
 # Композиция: часть создаётся внутри целого и без него не нужна.
 # Агрегация: целое хранит уже существующий объект, он живёт своей жизнью.
