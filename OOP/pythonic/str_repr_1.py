@@ -22,4 +22,3 @@ class Book:
 book = Book("Python", 400)
 print(book)                    # Python (400 стр.)   <- __str__
 print(repr(book))              # Book('Python', 400) <- __repr__
-print([book])                  # в контейнере Python зовёт __repr__

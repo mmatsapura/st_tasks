@@ -40,6 +40,7 @@ class Log:
 
 
 with Timer():
+    print(7/0)
     sum(range(100_000))
 
 with Log("timer_demo.txt") as file:
