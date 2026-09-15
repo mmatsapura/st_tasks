@@ -3,7 +3,7 @@
 from enum import Enum
 from dataclasses import dataclass
 from pydantic import BaseModel, Field
-from typing import Annotated
+from typing import Annotated, Any
 
 
 class CarKind(Enum):
@@ -39,6 +39,8 @@ class Car:
     kind: CarKind
 
     def __post_init__(self):
+        if not isinstance(self.plate, str) or not isinstance(self.model, str):
+            raise TypeError('plate и model должны быть строкой')
         if not self.plate or not self.model:
             raise ValueError('plate и model не могут быть пустыми')
 
@@ -61,32 +63,34 @@ class ParkingLot:
 
         self.name = name
         self.capacity = capacity
-        self.data = {}
+        self.__data = {}
 
-    @classmethod
-    def verify_name(cls, name):
+    @staticmethod
+    def verify_name(name: str):
         if not name:
             raise ValueError('name не может быть пустым')
+        if not isinstance(name, str):
+            raise TypeError('name должен быть строкой')
 
-    @classmethod
-    def verify_capacity(cls, capacity):
+    @staticmethod
+    def verify_capacity(capacity: int):
         if not isinstance(capacity, int):
             raise TypeError('capacity должен быть целым числом')
         if capacity <= 0:
             raise ValueError('capacity должно быть положительным числом и больше нуля')
 
     def park(self, park_car: Car):
-        if park_car.plate in self.data:
+        if park_car.plate in self.__data:
             raise DuplicatePlateError(f'{park_car.plate}')
-        if len(self.data) >= self.capacity:
+        if len(self.__data) >= self.capacity:
             raise FullError
-        self.data[park_car.plate] = park_car
+        self.__data[park_car.plate] = park_car
         return f'Машина припаркована {park_car}'
 
     def leave(self, plate):
-        if plate not in self.data:
+        if plate not in self.__data:
             raise UnknownPlateError(f'{plate}')
-        del_car = self.data.pop(plate)
+        del_car = self.__data.pop(plate)
         return del_car
 
     def add_from_dict(self, data: dict):
@@ -95,27 +99,26 @@ class ParkingLot:
         self.park(car_dict)
 
     def __len__(self):
-        return len(self.data)
+        return len(self.__data)
 
     def __bool__(self):
-        return len(self.data) > 0
+        return len(self.__data) > 0
 
     def __getitem__(self, plate):
-        if plate in self.data:
-            return self.data[plate]
+        if plate in self.__data:
+            return self.__data[plate]
         raise UnknownPlateError(f'{plate}')
 
     def __str__(self):
-        return f'ParkingLot({self.name}: {self.capacity - len(self.data)}/{self.capacity})'
+        return f'ParkingLot({self.name}: {self.capacity - len(self.__data)}/{self.capacity})'
 
     def __repr__(self):
-        return  f'ParkingLot({self.name}, capacity={self.capacity}, parked={len(self.data)})'
+        return  f'ParkingLot({self.name}, capacity={self.capacity}, parked={len(self.__data)})'
 
-    def __eq__(self, other):
-        if self.data.keys() == other.data.keys():
-            return True
-        return False
-
+    def __eq__(self, other: Any):
+        if not isinstance(other, ParkingLot):
+            return NotImplemented
+        return self.__data.keys() == other.__data.keys()
 
 class ParkingStay:
     def __init__(self, lot, auto):

@@ -60,7 +60,12 @@ class Warehouse:
 
     def put_item(self, item: RentItem):
         self.verify_item(item)
-        self.dict_warehouse[item.id] = item
+        if item.id in self.dict_warehouse or item.id in self.dict_rent:
+            raise RentStatusError(f'Вещь с таким ID {item.id} уже есть')
+        if item.status == RentStatus.RESERVED:
+            self.dict_rent[item.id] = item
+        else:
+            self.dict_warehouse[item.id] = item
 
     def take_item(self, item:RentItem):
         self.verify_item(item)
@@ -99,12 +104,10 @@ class Warehouse:
 
     def __eq__(self, value: object, /) -> bool:
         if not isinstance(value, Warehouse):
-            raise ValueError('Атрибут warehouse должен быть объектом класса Warehouse')
+            return NotImplemented
         my_all_items = self.dict_warehouse | self.dict_rent
         other_all_items = value.dict_warehouse | value.dict_rent
-        if my_all_items.keys() == other_all_items.keys():
-            return True
-        return False
+        return my_all_items.keys() == other_all_items.keys()
 
     def __getitem__(self, item):
         all_items = self.dict_warehouse | self.dict_rent
@@ -138,16 +141,19 @@ if __name__ == '__main__':
     print(len(my_warehouse))
 
     scooter = RentItem(id=1, name="Xiaomi PRO", price=500, kind=RentItemKind.SCOOTER, status=RentStatus.FREE)
-    bike = RentItem(id=2, name="Trek", price=1000, kind=RentItemKind.BICYCLE, status=RentStatus.FREE)
-    skateboard = RentItem(id=13, name='Ardis', price=100, kind=RentItemKind.SKATEBOARD, status=RentStatus.RESERVED)
+    scooter2 = RentItem(id=2, name="Xiaomi Ultra", price=400, kind=RentItemKind.SCOOTER, status=RentStatus.FREE)
+    scooter3 = RentItem(id=3, name="Xiaomi Dx", price=350, kind=RentItemKind.SCOOTER, status=RentStatus.FREE)
+    bike = RentItem(id=4, name="Trek-Pro", price=1300, kind=RentItemKind.BICYCLE, status=RentStatus.FREE)
+    bike2 = RentItem(id=5, name="Trek", price=1000, kind=RentItemKind.BICYCLE, status=RentStatus.FREE)
+    skateboard = RentItem(id=6, name='Ardis', price=100, kind=RentItemKind.SKATEBOARD, status=RentStatus.FREE)
 
     my_warehouse.put_item(scooter)
     my_warehouse.put_item(bike)
 
-    my_warehouse2.put_item(scooter)
-    my_warehouse2.put_item(bike)
+    my_warehouse2.put_item(scooter2)
+    my_warehouse2.put_item(bike2)
 
-    my_warehouse3.put_item(scooter)
+    my_warehouse3.put_item(scooter3)
     my_warehouse3.put_item(skateboard)
 
     print(my_warehouse)
