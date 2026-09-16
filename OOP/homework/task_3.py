@@ -125,15 +125,19 @@ class ParkingStay:
         self.lot = lot
         self.car = auto
 
+
     def __enter__(self):
         return self.lot.park(self.car)
+    #         self.lot.park(self.car)
+    #         return self.car
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.car is not None:
             self.lot.leave(self.car.plate)
+        return False # Не ковтать ошибку
 #_______________________________________________________________________________________
 # Пример:
-# lot = ParkingLot("Center", 2)
+lot = ParkingLot("Center", True)
 # toyota = Car("AA1234", "Toyota", CarKind.CAR)
 # honda = Car("BB7777", "Honda", CarKind.MOTO)
 #
