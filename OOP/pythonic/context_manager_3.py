@@ -39,7 +39,7 @@ class Log:
         return False
 
 
-with Timer():
+with Timer() as a:
     print(7/0)
     sum(range(100_000))
 
