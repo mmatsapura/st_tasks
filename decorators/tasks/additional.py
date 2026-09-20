@@ -4,8 +4,24 @@
 # "Function <name> executed in <seconds> seconds"
 # и вернуть результат функции.
 
+import functools
+import time
 
-# @time_it
+
+def time_it(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        results = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        total_time = end_time - start_time
+        print(f'"Function {func.__name__} executed in {total_time:.4f} seconds"')
+        return results
+    return wrapper
+
+
+
+@time_it
 def slow_operation():
     total = 0
     for i in range(10_000_000):
@@ -15,8 +31,7 @@ def slow_operation():
 
 result = slow_operation()
 print("Result:", result)
-
-
+#_______________________________________________________________________________________
 # Task 2
 # Напиши декоратор cache.
 #
@@ -41,8 +56,19 @@ print("Result:", result)
 # 9
 # 5
 
+def cache(func):
+    dict_for_results = {}
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if args not in dict_for_results.keys():
+            results = func(*args, **kwargs)
+            dict_for_results[args] = results
+            return dict_for_results[args]
+        else:
+            return dict_for_results[args]
+    return wrapper
 
-# @cache
+@cache
 def slow_add(a, b):
     print("Computing...")
     return a + b
@@ -53,7 +79,7 @@ print(slow_add(2, 3))
 print(slow_add(4, 5))
 print(slow_add(2, 3))
 
-
+#_______________________________________________________________________________________
 # Task 3
 # Сейчас все lambda печатают 25. Исправь так, чтобы вывелось:
 # 1 4 9 16 25
@@ -61,7 +87,7 @@ print(slow_add(2, 3))
 functions = []
 
 for n in range(1, 6):
-    functions.append(lambda: n * n)
+    functions.append(lambda x= n: x * x)
 
-for func in functions:
-    print(func())
+for fun in functions:
+    print(fun())
