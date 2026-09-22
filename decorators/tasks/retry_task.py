@@ -1,8 +1,7 @@
-'''
+"""
 Напиши декоратор retry(times), который повторяет выполнение функции
-при возникновении исключения.
-times — количество попыток.
-Если все попытки неудачны, декоратор выбрасывает последнее исключение.'''
+при возникновении исключения.times — количество попыток.
+Если все попытки неудачны, декоратор выбрасывает последнее исключение."""
 
 
 from functools import wraps
@@ -12,14 +11,13 @@ def retry(times):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            last_error = None
-            for _ in range(times):
+            for attempt in range(times):
                 try:
                     return func(*args, **kwargs)
-                except Exception as e:
-                    last_error = e
-                    print(f'Ошибка {e}')
-            raise last_error
+                except Exception:
+                    if attempt == times -1:
+                        raise
+            return None
         return wrapper
     return decorator
 
