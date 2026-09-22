@@ -15,7 +15,7 @@ def time_it(func):
         results = func(*args, **kwargs)
         end_time = time.perf_counter()
         total_time = end_time - start_time
-        print(f'"Function {func.__name__} executed in {total_time:.4f} seconds"')
+        print(f'Function {func.__name__} executed in {total_time:.4f} seconds')
         return results
     return wrapper
 
@@ -60,12 +60,10 @@ def cache(func):
     dict_for_results = {}
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        if args not in dict_for_results.keys():
+        if args not in dict_for_results:
             results = func(*args, **kwargs)
             dict_for_results[args] = results
-            return dict_for_results[args]
-        else:
-            return dict_for_results[args]
+        return dict_for_results[args]
     return wrapper
 
 @cache
