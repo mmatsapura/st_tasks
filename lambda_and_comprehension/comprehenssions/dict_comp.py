@@ -29,15 +29,3 @@ status = {
 #     'Kate': [10, 10],
 #     'Max': [12]
 # }
-
-grades = {
-    "Ann": [7, 10, 12],
-    "Bob": [12, 5, 11],
-    "Kate": [8, 10, 10],
-    "Max": [4, 12, 6],
-}
-
-result = {name: [mark for mark in scores if mark > 10]
-          for name, scores in grades.items()}
-
-print(result)
