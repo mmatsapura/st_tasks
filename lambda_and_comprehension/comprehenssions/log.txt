@@ -1,0 +1,8 @@
+INFO User logged in
+DEBUG Cache miss
+WARNING Low disk space
+INFO Operation completed
+INFO Operation completed
+DEBUG Connection established
+ERROR Unexpected shutdown
+INFO Operation completed
