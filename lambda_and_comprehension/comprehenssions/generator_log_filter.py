@@ -1,3 +1,6 @@
+import math
+
+
 def log_filter(filepath):
     with open(filepath, "r") as f:
         for line in f:

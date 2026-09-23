@@ -29,6 +29,3 @@ grades = [
 
 # Expected result
 # {10, 11, 12, 14, 16}
-
-result = {mark for row in grades for mark in row if mark > 10}
-print(result)

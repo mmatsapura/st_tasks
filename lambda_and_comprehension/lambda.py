@@ -4,6 +4,7 @@
 # filter() constructs an iterator from elements of an iterable for which a function returns True.
 # Syntax: filter(function, iterable)
 square = lambda x: x * x
+print(square)
 print(square(5))
 
 
@@ -13,6 +14,7 @@ f2 = lambda a, b, c: a + b + c
 
 sorted([5, 2, 9], key=lambda x: -x)
 nums = [1, 2, 3, 4]
+
 even = list(filter(lambda x: x % 2 == 0, nums))
 
 hosts = ["app01", "db01", "cache01"]
