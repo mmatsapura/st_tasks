@@ -5,3 +5,6 @@ users = [
     {"name": "Ivan", "age": 30},
     {"name": "Olga", "age": 19}
 ]
+
+result = list(filter(lambda user: user['age'] > 18 and user['name'].startswith('O'), users))
+print(result)
