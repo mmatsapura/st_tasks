@@ -4,3 +4,6 @@ products = [
     {"name": "banana", "price": 5},
     {"name": "cherry", "price": 20}
 ]
+
+result = list(map(lambda user: {'name': user['name'], 'price': user['price'] * 1.5 if user['price'] > 10 else user['price']}, products))
+print(result)
