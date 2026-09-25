@@ -1,0 +1,8 @@
+{"time": 1765475435.203567, "level": "INFO", "message": "User logged in", "context": {"user": "john"}}
+{"time": 1765475435.203567, "level": "INFO", "message": "Order processed", "context": {"order_id": 12345}}
+{"time": 1765475435.203567, "level": "INFO", "message": "User logged in", "context": {"user": "john"}}
+{"time": 1765475435.203567, "level": "ERROR", "message": "Order processed", "context": {"order_id": 123456}}
+{"time": 1765475435.203567, "level": "INFO", "message": "User logged in", "context": {"user": "john"}}
+{"time": 1765475435.203567, "level": "INFO", "message": "Order processed", "context": {"order_id": 12345}}
+{"time": 1765475435.203567, "level": "INFO", "message": "User logged in", "context": {"user": "john"}}
+{"time": 1765475435.203567, "level": "ERROR", "message": "Order processed", "context": {"order_id": 123457}}
