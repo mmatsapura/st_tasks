@@ -102,11 +102,7 @@ async def mood_chosen(callback: CallbackQuery) -> None:
     await callback.message.answer(replies.get(key, "Не понял настроение"))
 
 
-@router.message(F.text)
-async def echo_unknown(message: Message) -> None:
-    await message.answer(
-        f"Я пока не знаю «{message.text}».\nНажми кнопку внизу или /help."
-    )
+
 
 
 async def main() -> None:
