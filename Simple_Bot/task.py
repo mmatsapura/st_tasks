@@ -109,7 +109,7 @@ async def get_info(message: Message):
                          '/help : Посмотреть доступные команды')
 
 
-@router.message()
+@router.message(F.text)
 async def get_rest(message: Message):
     await message.answer('Нажми кнопку меню или вызови команду /menu, я простой бот')
 
@@ -117,7 +117,7 @@ async def get_rest(message: Message):
 @router.callback_query(F.data.startswith('drink:'))
 async def drink_chosen(callback: CallbackQuery):
     key = callback.data.split(':', 1)[1].strip()
-    name, price = drinks[key]
+    name, price = drinks.get(key, 'Нет такого напитка.')
     await callback.answer()
     await callback.message.answer(f'Вы выбрали: {name}. Цена: {price}')
 

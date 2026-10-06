@@ -143,7 +143,7 @@ async def cmd_weather(message: Message):
         with open(JSON_PATH, 'w') as file:
             json.dump(user_cities, file)
         await message.answer(f'{weather_data.city}: {weather_data.temperature}°C')
-    except Exception:
+    except (httpx.HTTPError, KeyError):
         await message.answer('Не удалось получить погоду')
 
 
@@ -162,6 +162,7 @@ async def get_weather_info(city_key) -> Weather:
                                         'longitude': CITIES[city_key][2],},
                                         timeout=10
                                     )
+        response.raise_for_status()
         data = response.json()
         return Weather(city=CITIES[city_key][0], temperature=data['current']['temperature_2m'])
 
@@ -180,7 +181,7 @@ async def cmd_history(message: Message) -> None:
         text += f'{item['city']}: {item['temperature']}°C ({item['time']})\n'
     await message.answer(text)
 
-@router.message()
+@router.message(F.text)
 async def all_text(message: Message) -> None:
     await message.answer('Нажми кнопку меню, я простой бот!')
 
