@@ -123,10 +123,11 @@ async def cancel_handler(message: Message, state: FSMContext) -> None:
 @router.message(F.text == 'Заказать', StateFilter(None))
 async def order_start(message: Message, state: FSMContext) -> None:
     await state.set_state(PlaceOrder.product)
+    await message.answer('Меню:', reply_markup=ReplyKeyboardRemove())
     await message.answer('Выберите блюдо:', reply_markup=items_keyboard())
 
 
-@router.message(F.text == 'Мой заказ', StateFilter(None))
+@router.message(F.text == 'Мой заказ')
 async def my_order_info(message: Message) -> None:
     order_data = USER_ORDERS.get(message.from_user.id)
     if order_data:
@@ -139,9 +140,12 @@ async def my_order_info(message: Message) -> None:
 async def chosen_product(callback: CallbackQuery, state: FSMContext) -> None:
     key = callback.data.split(':', 1)[1]
     title = foods.get(key)
+    if title is None:
+        await callback.answer('Не найдено!')
+        return
+    await callback.answer('Done!')
     await state.update_data(product=title)
     await state.set_state(PlaceOrder.quantity)
-    await callback.answer('Done!')
     await callback.message.answer('Какое количество желаете?')
 
 
@@ -166,7 +170,7 @@ async def process_quantity(message: Message, state: FSMContext) -> None:
 
 @router.message(PlaceOrder.address, F.text)
 async def process_address(message: Message, state: FSMContext) -> None:
-    if not len(message.text) >= 5:
+    if not len(message.text.strip()) >= 5:
         await message.answer('Адрес должен быть не короче 5 символов')
         return
     address = message.text
@@ -183,7 +187,8 @@ async def process_phone_number(message: Message, state: FSMContext) -> None:
     phone_number = message.text
     await state.update_data(phone_number=phone_number)
     await state.set_state(PlaceOrder.confirmation)
-    await message.answer('Подтвердите ваш заказ', reply_markup=confirmation_keyboard())
+    data = await state.get_data()
+    await message.answer(f'Подтвердите ваш заказ:\n {format_order(data)}', reply_markup=confirmation_keyboard())
 
 
 @router.message(PlaceOrder.confirmation, F.text == 'Нет')
@@ -201,6 +206,11 @@ async def process_answer_yes(message: Message, state: FSMContext) -> None:
         'Заказ сохранен.\n' + format_order(data),
         reply_markup=main_keyboard(),
     )
+
+
+@router.message(PlaceOrder.confirmation, F.text)
+async def process_confirm_other(message: Message) -> None:
+    await message.answer('Выбери «Да» или «Нет».')
 
 
 @router.message(StateFilter(None), F.text)
