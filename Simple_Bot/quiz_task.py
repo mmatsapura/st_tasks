@@ -90,7 +90,7 @@ logging.basicConfig(level=logging.INFO)
 
 router = Router()
 
-SCORES: dict[int, dict] = {}
+SCORES: dict[int, int] = {}
 
 
 quiz_1 = {'1000': '1000',
@@ -98,9 +98,9 @@ quiz_1 = {'1000': '1000',
           '8': '8'
          }
 
-quiz_3 = {'=': '=',
-          '==': '==',
-          '===': '==='
+quiz_3 = {'eq': '=',
+          'asign': '==',
+          'js': '==='
          }
 
 class Questions(StatesGroup):
@@ -179,18 +179,17 @@ async def start_play(message: Message, state: FSMContext) -> None:
 
 @router.callback_query(Questions.question_1, F.data.startswith('quiz1:'))
 async def play_quiz_1(callback: CallbackQuery, state: FSMContext) -> None:
+    await callback.answer()
     key = callback.data.split(':', 1)[1]
-    answer = quiz_1.get(key)
     data = await state.get_data()
     current_score = data.get('score', 0)
-    if answer =='1024':
+    if key =='1024':
         current_score += 1
         await callback.message.answer('Отлично..Ответ верный!')
     else:
         await callback.message.answer('Упс..Ошибочка')
-    await state.update_data(score= current_score, question_1=answer)
+    await state.update_data(score= current_score, question_1=key)
     await state.set_state(Questions.question_2)
-    await callback.answer()
     await callback.message.answer('Вопрос №2:\nСколько ног у паука? Напиши число:')
 
 
@@ -218,16 +217,15 @@ async def play_quiz_2(message: Message, state: FSMContext) -> None:
 
 @router.callback_query(Questions.question_3, F.data.startswith('quiz3:'))
 async def play_quiz_3(callback: CallbackQuery, state: FSMContext) -> None:
+    await callback.answer()
     key = callback.data.split(':', 1)[1]
-    answer = quiz_3.get(key)
     data = await state.get_data()
     current_score = data.get('score', 0)
-    if answer == '==':
+    if key == '==':
         current_score += 1
         await callback.message.answer('Отлично..Ответ верный!')
     else:
         await callback.message.answer('Упс..Ошибочка')
-    await callback.answer()
     past_record = SCORES.get(callback.from_user.id)
     await callback.message.answer(f'Твой счёт {current_score}/3')
     if past_record is None or current_score > past_record:

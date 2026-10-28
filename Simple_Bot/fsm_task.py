@@ -141,7 +141,7 @@ async def chosen_product(callback: CallbackQuery, state: FSMContext) -> None:
     key = callback.data.split(':', 1)[1]
     title = foods.get(key)
     if title is None:
-        await callback.answer('Не найдено!')
+        await callback.message.answer('Не найдено!')
         return
     await callback.answer('Done!')
     await state.update_data(product=title)
