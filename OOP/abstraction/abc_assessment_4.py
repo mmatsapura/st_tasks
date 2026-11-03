@@ -13,7 +13,7 @@
 #
 # Project по-прежнему единственный с tasks. Assessment про задания не знает.
 # Это проверка: "лишняя деталь уехала к ребёнку, контракт от этого не раздулся".
-
+#sdsadsa
 
 from abc import ABC, abstractmethod
 
