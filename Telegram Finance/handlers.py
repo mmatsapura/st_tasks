@@ -12,7 +12,7 @@ from keyboards import (main_keyboard, statistic_keyboard, category_transaction_k
                        change_history_category_keyboard)
 from database import USER_DATA, TRANSACTION_ID, USER_LIMITS, USER_CATEGORIES
 from constants import (choice_category_expenses, choice_category_income,
-                       choice_type, choice_statistic)
+                       choice_type, choice_statistic, choice_add_type)
 from states import (StateStatistic, StateExpensesRevenue, StateSetAmount,
                     StateSetAmountCategory, StateCreateCategory, StateEditCategory,
                     StateDelTransaction, StateEditTransaction)
@@ -107,10 +107,12 @@ async def process_statistics(callback: CallbackQuery) -> None:
 
 
 
-@router.message(StateExpensesRevenue.amount_money)
+@router.message(StateExpensesRevenue.amount_money, F.text)
 async def choice_type_transaction(message: Message, state: FSMContext) -> None:
-    if not message.text.isdigit():
-        await message.answer('Вводите только цифры')
+    try:
+        text_amount = float(message.text)
+    except ValueError:
+        await message.answer('Введите корректную сумму цифрами')
         return
     await state.update_data(amount_money=int(message.text))
     await state.set_state(StateExpensesRevenue.transaction_type)
@@ -178,7 +180,7 @@ async def process_expenses_category(callback: CallbackQuery, state: FSMContext) 
     await callback.message.answer('Добавлен расход:\n' + format_response(data), reply_markup=main_keyboard())
 
 
-@router.message(F.text == 'История🕒')
+@router.message(F.text == 'История🕒', StateFilter(None))
 async def get_history(message: Message) -> None:
     last_transactions = USER_DATA.get(message.from_user.id, [])[-5:]
     text = 'Ваши последние операции:\n'
@@ -206,7 +208,8 @@ async def del_category(message: Message, state: FSMContext) -> None:
     if not message.text.isdigit():
         await message.answer('Вводите только цифры!')
         return
-    for item in USER_DATA[message.from_user.id]:
+    transactions = USER_DATA.get(message.from_user.id, [])
+    for item in transactions:
         if item['transaction_number'] == int(message.text):
             USER_DATA[message.from_user.id].remove(item)
             await message.answer('Транзакция успешно удалена ✅')
@@ -227,7 +230,8 @@ async def edit_id(message: Message, state: FSMContext) -> None:
     if not message.text.isdigit():
         await message.answer('Вводите только цифры!')
         return
-    for item in USER_DATA[message.from_user.id]:
+    transactions = USER_DATA.get(message.from_user.id, [])
+    for item in transactions:
         if item['transaction_number'] == int(message.text):
             await state.update_data(edit_id=item['transaction_number'])
             await message.answer('Транзакция найдена ✅\nВыберите что хотите изменить:\n', reply_markup=edit_history_keyboard())
@@ -244,14 +248,16 @@ async def edit_amount(callback: CallbackQuery, state: FSMContext) -> None:
 
 @router.message(StateEditTransaction.new_amount, F.text)
 async def save_edit_amount(message: Message, state: FSMContext) -> None:
-    if not message.text.isdigit():
-        await message.answer('Вводите только цифры!')
+    try:
+        text_amount = float(message.text)
+    except ValueError:
+        await message.answer('Введите корректную сумму цифрами')
         return
     data = await state.get_data()
     id = data['edit_id']
     for item in USER_DATA[message.from_user.id]:
         if item['transaction_number'] == id:
-            item['amount_money'] = int(message.text)
+            item['amount_money'] = float(message.text)
             await state.set_state(StateEditTransaction.number)
             await message.answer('Сумма успешно изменена✅\nХотите изменить что-то еще?\n', reply_markup=edit_history_keyboard())
             return
@@ -288,14 +294,14 @@ async def end_edit(callback: CallbackQuery, state: FSMContext) -> None:
     await state.clear()
 
 
-@router.message(F.text == 'Информация по доступным командамℹ️')
+@router.message(F.text == 'Информация по доступным командамℹ️', StateFilter(None))
 async def get_info(message: Message) -> None:
     await message.answer('Доступные команды:\n'
                          '/menu - Открыть главное меню\n'
                          '/cancel - Отменить/Прервать действие')
 
 
-@router.message(F.text == 'Настройки⚙️')
+@router.message(F.text == 'Настройки⚙️', StateFilter(None))
 async def choice_settings(message: Message) -> None:
     await message.answer('Список настроек:\n', reply_markup=limits_keyboard())
 
@@ -307,10 +313,12 @@ async def process_set_limit_for_month(callback: CallbackQuery, state: FSMContext
     await callback.message.answer('Установите лимит:')
 
 
-@router.message(StateSetAmount.amount)
+@router.message(StateSetAmount.amount, F.text)
 async def set_limit_for_month(message: Message, state: FSMContext) -> None:
-    if not message.text.isdigit():
-        await message.answer('Вводите только цифры!')
+    try:
+        text_amount = float(message.text)
+    except ValueError:
+        await message.answer('Введите корректную сумму цифрами')
         return
     await state.update_data(amount=message.text)
     set_limit_month(message.from_user.id, 'total_budget', amount=float(message.text))
@@ -336,8 +344,10 @@ async def process_set_limit_amount(callback: CallbackQuery, state: FSMContext) -
 
 @router.message(StateSetAmountCategory.amount, F.text)
 async def set_amount_limit_category(message: Message, state: FSMContext) -> None:
-    if not message.text.isdigit():
-        await message.answer('Вводите только цифры!')
+    try:
+        text_amount = float(message.text)
+    except ValueError:
+        await message.answer('Введите корректную сумму цифрами')
         return
     await state.update_data(amount=message.text)
     data = await state.get_data()
@@ -355,10 +365,13 @@ async def process_add_type_cat(callback: CallbackQuery, state: FSMContext) -> No
     await callback.message.answer('Выберите тип транзакции:\n', reply_markup=create_category_type_keyboard())
 
 
-@router.callback_query(StateCreateCategory.type_category)
+@router.callback_query(StateCreateCategory.type_category, F.data.startswith('add_type:'))
 async def process_add_name_cat(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
     key = callback.data.split(':', 1)[1]
+    if key not in choice_add_type:
+        await callback.message.answer('Ошибка: неизвестный тип категории')
+        return
     await state.update_data(type_category=key)
     await state.set_state(StateCreateCategory.name)
     await callback.message.answer('Введите название категории с эмодзи или без как желаете🤗')
