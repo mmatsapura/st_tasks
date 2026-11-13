@@ -12,7 +12,7 @@ try:
 except Exception:
     redis_available = False
 
-file = '/app/data/visits.txt'
+file = '/webapp/data/visits.txt'
 
 
 def count_visits():
