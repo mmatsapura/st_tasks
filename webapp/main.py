@@ -16,7 +16,7 @@ file = '/webapp/data/visits.txt'
 
 
 def count_visits():
-    os.makedirs('/app/data/', exist_ok=True)
+    os.makedirs(os.path.dirname(file), exist_ok=True)
     try:
         with open(file, 'r+', encoding='utf_8') as f:
             f.seek(0)
