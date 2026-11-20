@@ -1,0 +1,100 @@
+# Задание 1. Сетевая адресация
+
+# В docker-compose.yml описаны два сервиса: frontend (проброшен порт "3000:80")
+# и api (проброшен порт "8000:8000").
+#_______________________________________________________________________________________
+# 1. По какому адресу пользователь откроет сайт в своём браузере?
+# http://localhost:3000 или http://[ip address]:3000
+#_______________________________________________________________________________________
+# 2. Какой URL должен использовать код внутри контейнера frontend при серверном
+# запросе к api?
+# http://api:8000
+#_______________________________________________________________________________________
+# 3. Нужно ли оставлять строку ports: ["8000:8000"] у api, если к нему
+# обращается только серверная часть frontend, а напрямую из браузера запросы
+# туда не идут?
+# Нет сервисы общаются внутри сети Docker Compose по DNS
+#_______________________________________________________________________________________
+# Задание2: ИСПРАВЬ ФАЙЛ
+#
+# services:
+#   app:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     env_file:
+#       - .env
+#     ports:
+#       - "8000:8000"
+#     environment:
+#       - DB_URL=postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-secret}@postgres_db:5432/${POSTGRES_DB:-shop}
+#       - CACHE_URL=redis://redis_cache:6379
+#     depends_on:
+#       postgres_db:
+#           condition: service_healthy
+#       redis_cache:
+#           condition: service_healthy
+#     restart: unless-stopped
+#
+#   postgres_db:
+#     image: postgres:15
+#     environment:
+#       POSTGRES_USER: ${POSTGRES_USER:-admin}
+#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+#       POSTGRES_DB: ${POSTGRES_DB:-shop}
+#     volumes:
+#       - shop_pg_data:/var/lib/postgresql/data
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-shop}"]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 5
+#
+#   redis_cache:
+#     image: redis:7-alpine
+#     healthcheck:
+#       test: ["CMD", "redis-cli", "ping"]
+#       interval: 5s
+#       timeout: 3s
+#       retries: 5
+#
+# volumes:
+#   shop_pg_data:
+#_______________________________________________________________________________________
+# Задание 3:
+# Задача: Спроектировать и написать с нуля файл docker-compose.yml для веб-сервиса сокращения ссылок, состоящего из 3 контейнеров:
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8080:5000'
+    volumes:
+      - ./:/code
+    env_file:
+      - .env
+    environment:
+      REDIS_HOST: cache
+      SECRET_KEY: ${SECRET_KEY}
+    depends_on:
+      - nginx
+      - cache
+    restart: unless-stopped
+
+  cache:
+    image: redis:7-alpine
+    command: redis-server --requirepass my_redis_pass
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  redis_data:
